@@ -1,0 +1,137 @@
+<!-- accounts/templates/accounts/account_form.html -->
+{% extends "accounts/base.html" %}
+
+{% block title %}{% if account %}Edit Account{% else %}Create New Account{% endif %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{% if account %}Edit Account{% else %}Create New Account{% endif %}</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- Form errors -->
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row mb-3">
+                <!-- Account number field -->
+                <div class="col-md-6">
+                    <label for="{{ form.number.id_for_label }}" class="form-label">Account Number*</label>
+                    <input type="text" name="{{ form.number.name }}" id="{{ form.number.id_for_label }}" 
+                           class="form-control {% if form.number.errors %}is-invalid{% endif %}" 
+                           value="{{ form.number.value|default:'' }}" 
+                           {% if account %}readonly{% endif %}>
+                    {% if form.number.help_text %}
+                    <div class="form-text text-muted">{{ form.number.help_text }}</div>
+                    {% endif %}
+                    {% if form.number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.number.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Account name field -->
+                <div class="col-md-6">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">Account Name*</label>
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                           class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                           value="{{ form.name.value|default:'' }}">
+                    {% if form.name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <!-- Account type field -->
+                <div class="col-md-6">
+                    <label for="{{ form.account_type.id_for_label }}" class="form-label">Account Type*</label>
+                    <select name="{{ form.account_type.name }}" id="{{ form.account_type.id_for_label }}" 
+                            class="form-select {% if form.account_type.errors %}is-invalid{% endif %}">
+                        <option value="">Select an account type</option>
+                        {% for type_id, type_name in form.account_type.field.choices %}
+                            <option value="{{ type_id }}" {% if form.account_type.value|stringformat:"s" == type_id|stringformat:"s" %}selected{% endif %}>
+                                {{ type_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.account_type.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.account_type.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Parent account field -->
+                <div class="col-md-6">
+                    <label for="{{ form.parent.id_for_label }}" class="form-label">Parent Account</label>
+                    <select name="{{ form.parent.name }}" id="{{ form.parent.id_for_label }}" 
+                            class="form-select {% if form.parent.errors %}is-invalid{% endif %}">
+                        <option value="">No parent (top-level account)</option>
+                        {% for parent_id, parent_name in form.parent.field.choices %}
+                            {% if parent_id %}
+                            <option value="{{ parent_id }}" {% if form.parent.value|stringformat:"s" == parent_id|stringformat:"s" %}selected{% endif %}>
+                                {{ parent_name }}
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.parent.help_text %}
+                    <div class="form-text text-muted">{{ form.parent.help_text }}</div>
+                    {% endif %}
+                    {% if form.parent.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.parent.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Description field -->
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" 
+                          class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                          rows="3">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.description.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Action buttons -->
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    {% if account %}Save Changes{% else %}Create Account{% endif %}
+                </button>
+                <a href="{% if account %}{% url 'accounts:account_detail' account.number %}{% else %}{% url 'accounts:account_list' %}{% endif %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

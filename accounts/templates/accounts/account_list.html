@@ -1,0 +1,136 @@
+<!-- accounts/templates/accounts/account_list.html -->
+{% extends "accounts/base.html" %}
+
+{% block title %}Chart of Accounts{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Chart of Accounts</h1>
+    <a href="{% url 'accounts:account_create' %}" class="btn btn-primary">New Account</a>
+</div>
+
+<!-- Search and filter form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Filter Accounts</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for status_code, status_name in status_choices %}
+                    <option value="{{ status_code }}" {% if request.GET.status == status_code %}selected{% endif %}>
+                        {{ status_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="account_type" class="form-label">Account Type</label>
+                <select name="account_type" id="account_type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for type in account_types %}
+                    <option value="{{ type.id }}" {% if request.GET.account_type == type.id|stringformat:"i" %}selected{% endif %}>
+                        {{ type.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" name="search" id="search" value="{{ search_query }}" class="form-control" placeholder="Account number, name, or description...">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Apply</button>
+                <a href="{% url 'accounts:account_list' %}" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Accounts table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in page_obj %}
+                    <tr>
+                        <td>{{ account.number }}</td>
+                        <td>{{ account.name }}</td>
+                        <td>{{ account.account_type.name }}</td>
+                        <td>
+                            <span class="badge {% if account.status == 'ACTIVE' %}bg-success{% elif account.status == 'ARCHIVED' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ account.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'accounts:account_detail' account.number %}" class="btn btn-sm btn-info">View</a>
+                            <a href="{% url 'accounts:account_edit' account.number %}" class="btn btn-sm btn-secondary">Edit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="text-muted">No accounts found matching your criteria.</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}&account_type={{ account_type_filter }}&search={{ search_query }}">
+                <span aria-hidden="true">&laquo;</span> Previous
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link"><span aria-hidden="true">&laquo;</span> Previous</span>
+        </li>
+        {% endif %}
+        
+        {% for i in page_obj.paginator.page_range %}
+            {% if page_obj.number == i %}
+                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+            {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}&status={{ status_filter }}&account_type={{ account_type_filter }}&search={{ search_query }}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}&account_type={{ account_type_filter }}&search={{ search_query }}">
+                Next <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Next <span aria-hidden="true">&raquo;</span></span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

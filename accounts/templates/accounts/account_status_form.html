@@ -1,0 +1,135 @@
+<!-- accounts/templates/accounts/account_status_form.html -->
+{% extends "accounts/base.html" %}
+
+{% block title %}Change Status: {{ account.number }} - {{ account.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Change Account Status</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Account info -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Account Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Account Number:</strong> {{ account.number }}</p>
+                        <p><strong>Account Name:</strong> {{ account.name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Current Status:</strong> 
+                            <span class="badge {% if account.status == 'ACTIVE' %}bg-success{% elif account.status == 'ARCHIVED' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ account.get_status_display }}
+                            </span>
+                        </p>
+                        <p><strong>Last Changed:</strong> 
+                            {% if account.status_change_date %}
+                                {{ account.status_change_date }}
+                            {% else %}
+                                <span class="text-muted">Never changed</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status change form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Change Status</h5>
+            </div>
+            <div class="card-body">
+                {% if status_choices %}
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- New status field -->
+                        <div class="mb-3">
+                            <label for="{{ form.new_status.id_for_label }}" class="form-label">New Status*</label>
+                            <select name="{{ form.new_status.name }}" id="{{ form.new_status.id_for_label }}" 
+                                    class="form-select {% if form.new_status.errors %}is-invalid{% endif %}">
+                                {% for status_code, status_name in status_choices %}
+                                <option value="{{ status_code }}">{{ status_name }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.new_status.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.new_status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Reason field -->
+                        <div class="mb-3">
+                            <label for="{{ form.reason.id_for_label }}" class="form-label">Reason for Change</label>
+                            <textarea name="{{ form.reason.name }}" id="{{ form.reason.id_for_label }}" 
+                                    class="form-control {% if form.reason.errors %}is-invalid{% endif %}" 
+                                    rows="3">{{ form.reason.value|default:'' }}</textarea>
+                            <div class="form-text text-muted">Please provide a reason for this status change.</div>
+                            {% if form.reason.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.reason.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Action buttons -->
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Change Status</button>
+                            <a href="{% url 'accounts:account_detail' account.number %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <p>This account cannot transition to any other status from its current status <strong>{{ account.get_status_display }}</strong>.</p>
+                        <p>Please contact an administrator if you believe this is an error.</p>
+                    </div>
+                    <a href="{% url 'accounts:account_detail' account.number %}" class="btn btn-secondary">Back to Account</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Status transition rules -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Status Transition Rules</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <span class="badge bg-warning">Pending</span> accounts can be:
+                        <ul class="mt-2">
+                            <li>Approved (becomes <span class="badge bg-success">Active</span>)</li>
+                            <li>Rejected (becomes <span class="badge bg-danger">Archived</span>)</li>
+                        </ul>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge bg-success">Active</span> accounts can be:
+                        <ul class="mt-2">
+                            <li>Archived (becomes <span class="badge bg-danger">Archived</span>)</li>
+                        </ul>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge bg-danger">Archived</span> accounts can be:
+                        <ul class="mt-2">
+                            <li>Restored (becomes <span class="badge bg-success">Active</span>)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

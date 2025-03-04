@@ -1,0 +1,58 @@
+<!-- accounts/templates/accounts/account_type_list.html -->
+{% extends "accounts/base.html" %}
+
+{% block title %}Account Types{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Account Types</h1>
+    <!-- Add a link to create new account types if you implement that functionality -->
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Normal Balance</th>
+                        <th>Description</th>
+                        <th>Account Range</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for type in account_types %}
+                    <tr>
+                        <td>{{ type.name }}</td>
+                        <td>{{ type.get_normal_balance_display }}</td>
+                        <td>{{ type.description|default:"—" }}</td>
+                        <td>
+                            {% if type.name == 'Asset' %}
+                                100000 - 199999
+                            {% elif type.name == 'Liability' %}
+                                200000 - 289999
+                            {% elif type.name == 'Equity' %}
+                                290000 - 299999
+                            {% elif type.name == 'Revenue' %}
+                                300000 - 399999
+                            {% elif type.name == 'COGS' %}
+                                400000 - 499999
+                            {% elif type.name == 'Operating Expense' %}
+                                500000 - 599999
+                            {% elif type.name == 'G&A' %}
+                                600000 - 699999
+                            {% elif type.name == 'Other' %}
+                                700000 - 799999
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,173 @@
+<!-- accounts/templates/accounts/account_detail.html -->
+{% extends "accounts/base.html" %}
+
+{% block title %}Account: {{ account.number }} - {{ account.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Account Details</h1>
+    <div>
+        <a href="{% url 'accounts:account_edit' account.number %}" class="btn btn-primary">Edit Account</a>
+        <a href="{% url 'accounts:account_status_change' account.number %}" class="btn btn-secondary">Change Status</a>
+    </div>
+</div>
+
+<!-- Account information card -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Basic Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 35%">Account Number:</th>
+                        <td>{{ account.number }}</td>
+                    </tr>
+                    <tr>
+                        <th>Account Name:</th>
+                        <td>{{ account.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Account Type:</th>
+                        <td>{{ account.account_type.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Normal Balance:</th>
+                        <td>{{ account.account_type.get_normal_balance_display }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 35%">Status:</th>
+                        <td>
+                            <span class="badge {% if account.status == 'ACTIVE' %}bg-success{% elif account.status == 'ARCHIVED' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ account.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Is Active:</th>
+                        <td>{{ account.is_active|yesno:"Yes,No" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Parent Account:</th>
+                        <td>
+                            {% if account.parent %}
+                            <a href="{% url 'accounts:account_detail' account.parent.number %}">
+                                {{ account.parent.number }} - {{ account.parent.name }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">None (Top-level account)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created:</th>
+                        <td>{{ account.created_at|date:"F j, Y, g:i a" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        {% if account.description %}
+        <div class="mt-3">
+            <h6>Description:</h6>
+            <p>{{ account.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Child accounts (if any) -->
+{% if child_accounts %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Child Accounts</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for child in child_accounts %}
+                    <tr>
+                        <td>{{ child.number }}</td>
+                        <td>{{ child.name }}</td>
+                        <td>
+                            <span class="badge {% if child.status == 'ACTIVE' %}bg-success{% elif child.status == 'ARCHIVED' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ child.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'accounts:account_detail' child.number %}" class="btn btn-sm btn-info">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Status history -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Status History</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                        <th>Created By</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for history in status_history %}
+                    <tr>
+                        <td>{{ history.effective_date }}</td>
+                        <td>
+                            <span class="badge {% if history.status == 'ACTIVE' %}bg-success{% elif history.status == 'ARCHIVED' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ history.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ history.notes|default:"—" }}</td>
+                        <td>{{ history.created_by|default:"System" }}</td>
+                        <td>{{ history.created_at|date:"F j, Y, g:i a" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="text-muted">No status history records found.</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Back button -->
+<div class="mt-4">
+    <a href="{% url 'accounts:account_list' %}" class="btn btn-secondary">
+        Back to Accounts List
+    </a>
+</div>
+{% endblock %}
